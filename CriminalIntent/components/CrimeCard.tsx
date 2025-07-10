@@ -8,8 +8,9 @@ const CrimeCard = ({ crime }) => {
   return (
     <Pressable onPress={() => router.push("/crime")}>
         <View>
-            <Text>{crime.type}</Text>
-            <Text>Time of Crime: {crime.time}</Text>
+            <Text>{crime.title}</Text>
+            <Text>Details: {crime.details}</Text>
+            <Text>Date: {crime.date}</Text>
             <MaterialCommunityIcons name="handcuffs" size={24} color="black" />
         </View>
     </Pressable>

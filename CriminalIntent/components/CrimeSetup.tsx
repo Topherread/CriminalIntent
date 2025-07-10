@@ -1,29 +1,47 @@
 import React from "react";
+import { useState } from "react";
 import MainButton from "@/components/MainButton";
 import TextInput from "@/components/TextInput";
 import { View, Text, StyleSheet } from "react-native";
 import DatePicker from "@react-native-community/datetimepicker";
+import { useRouter } from "expo-router";
+import { insertCrime } from "../services/database";
 
 const CrimeSetup = () => {
-  let crime = { Title: "", Details: "", Date: new Date() };
+  const [crime, setCrime] = useState({
+    title: "",
+    details: "",
+    date: new Date(),
+  });
+  const router = useRouter();
+  const handleSubmit = () => {
+    try {
+      const crimeId = insertCrime(crime);
+      console.log("Crime saved with ID:", crimeId);
+      router.back();
+    } catch (error) {
+      console.error("Error saving crime:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Crime Details</Text>
       <TextInput
         placeholder="Enter crime title"
-        value={crime.Title}
-        onChangeText={(text) => (crime.Title = text)}
+        value={crime.title}
+        onChangeText={(text) => setCrime({...crime, title: text})}
       />
       <TextInput
         placeholder="Enter crime details"
-        value={crime.Details}
-        onChangeText={(text) => (crime.Details = text)}
+        value={crime.details}
+        onChangeText={(text) => setCrime({...crime, details: text})}
       />
       <DatePicker
-        value={crime.Date}
-        onChange={(date) => (crime.Date = date)}
+        value={crime.date}
+        onChange={(event, date) => setCrime({...crime, date: date || new Date()})}
       />
-      <MainButton title="Submit Crime" onPress={() => console.log("Crime submitted")} />
+      <MainButton title="Submit Crime" onPress={handleSubmit} />
     </View>
   );
 };

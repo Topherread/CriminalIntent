@@ -1,15 +1,34 @@
 import { FlatList } from "react-native";
 import CrimeCard from "./CrimeCard";
+import React, { useState, useEffect } from "react";
+import { getAllCrimes } from "@/services/database";
+import { useFocusEffect } from "@react-navigation/native";
 
 const CriminalActivityList = () => {
+  const [crimes, setCrimes] = useState([]);
+
+  const loadCrimes = () => {
+    try {
+      const allCrimes = getAllCrimes();
+      setCrimes(allCrimes);
+    } catch (error) {
+      console.error("Error loading crimes:", error);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadCrimes();
+    }, [])
+  );
 
   return (
     <FlatList
-      data={[{ crime: { id: '1', type: 'Theft', time: '12:00 PM' } }, { crime: { id: '2', type: 'Burglary', time: '1:00 PM' } }, { crime: { id: '3', type: 'Assault', time: '2:00 PM' } }]}
-      renderItem={({ item }) => <CrimeCard crime={item.crime} />}
-      keyExtractor={item => item.crime.id}
+      data={crimes}
+      renderItem={({ item }) => <CrimeCard crime={item} />}
+      keyExtractor={(item: any, index) => item.id ? item.id.toString() : index.toString()}
     />
   );
-}
+};
 
 export default CriminalActivityList;
