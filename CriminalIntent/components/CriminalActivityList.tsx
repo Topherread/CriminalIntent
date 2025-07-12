@@ -1,7 +1,7 @@
 import { FlatList } from "react-native";
 import CrimeCard from "./CrimeCard";
 import React, { useState, useEffect } from "react";
-import { getAllCrimes } from "@/services/database";
+import { getAllCrimes } from "@/services/crimedatabase";
 import { useFocusEffect } from "@react-navigation/native";
 
 const CriminalActivityList = () => {
@@ -25,8 +25,13 @@ const CriminalActivityList = () => {
   return (
     <FlatList
       data={crimes}
-      renderItem={({ item }) => <CrimeCard crime={item} />}
-      keyExtractor={(item: any, index) => item.id ? item.id.toString() : index.toString()}
+      renderItem={({ item }) => (
+        <CrimeCard 
+          crime={item} 
+          onCrimeDeleted={loadCrimes}
+        />
+      )}
+      keyExtractor={(item: any, index) => item.id || index.toString()}
     />
   );
 };
