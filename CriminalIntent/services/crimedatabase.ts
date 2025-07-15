@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
 
 interface Crime {
-  id?: string; // Changed from number to string for UUID
+  id?: string; 
   title: string;
   details: string;
   date: string | Date;
@@ -15,9 +15,8 @@ const db = SQLite.openDatabaseSync('criminalIntent.db');
 
 export const initializeDatabase = () => {
   try {
-    // Create new table with UUID primary key
     db.execSync(`
-        CREATE TABLE IF NOT EXISTS crimes_new (
+        CREATE TABLE IF NOT EXISTS crimes (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             details TEXT NOT NULL,
@@ -28,48 +27,29 @@ export const initializeDatabase = () => {
         )
     `);
 
-    // Check if old table exists and migrate data if needed
-    try {
-      const oldTableExists = db.getFirstSync("SELECT name FROM sqlite_master WHERE type='table' AND name='crimes'");
-      if (oldTableExists) {
-        // Copy data from old table to new table with UUIDs
-        const oldCrimes = db.getAllSync('SELECT * FROM crimes') as any[];
-        for (const crime of oldCrimes) {
-          const uuid = Crypto.randomUUID();
-          db.runSync(
-            'INSERT INTO crimes_new (id, title, details, date, solved, image, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [uuid, crime.title, crime.details, crime.date, crime.solved || 0, crime.image, crime.createdAt]
-          );
-        }
-        // Drop old table and rename new one
-        db.execSync('DROP TABLE crimes');
-        db.execSync('ALTER TABLE crimes_new RENAME TO crimes');
-        console.log('Migrated to UUID-based table');
-      } else {
-        // No old table, just rename the new one
-        db.execSync('ALTER TABLE crimes_new RENAME TO crimes');
-      }
-    } catch (migrationError) {
-      console.log('Migration not needed or completed');
-    }
-
     try {
       db.execSync(`ALTER TABLE crimes ADD COLUMN image TEXT`);
-      console.log('Added image column to existing table');
     } catch (alterError) {
-      console.log('image column already exists or table is new');
     }
-    
-    console.log('Database initialized successfully');
   } catch (error) {
     console.error('Database initialization error:', error);
     throw error;
   }
 };
 
+export const resetDatabase = () => {
+  try {
+    db.execSync('DROP TABLE IF EXISTS crimes');
+    initializeDatabase();
+  } catch (error) {
+    console.error('Database reset error:', error);
+    throw error;
+  }
+};
+
 export const insertCrime = (crime: Crime) => {
   try {
-    const crimeId = Crypto.randomUUID(); // Generate UUID
+    const crimeId = Crypto.randomUUID();
     const statement = db.prepareSync(
       'INSERT INTO crimes (id, title, details, date, solved, image) VALUES (?, ?, ?, ?, ?, ?)'
     );
@@ -77,7 +57,7 @@ export const insertCrime = (crime: Crime) => {
     const dateString = crime.date instanceof Date ? crime.date.toISOString() : crime.date;
     
     statement.executeSync([
-      crimeId,           // UUID instead of auto-increment
+      crimeId,          
       crime.title || '',
       crime.details || '',
       dateString,
@@ -85,26 +65,38 @@ export const insertCrime = (crime: Crime) => {
       crime.image || null
     ]);
     
-    return crimeId; // Return the UUID
+    return crimeId; 
   } catch (error) {
     console.error('Database insert error:', error);
     throw error;
   }
 };
 
-export const getAllCrimes = () => {
+export const getAllCrimes = (): Crime[] => {
   try {
+    const tableExists = db.getFirstSync("SELECT name FROM sqlite_master WHERE type='table' AND name='crimes'");
+    if (!tableExists) {
+      initializeDatabase();
+    }
+    
     const statement = db.prepareSync('SELECT * FROM crimes ORDER BY createdAt DESC');
-    return statement.executeSync().getAllSync();
+    return statement.executeSync().getAllSync() as Crime[];
   } catch (error) {
     console.error('Database select error:', error);
-    return [];
+    try {
+      initializeDatabase();
+      const statement = db.prepareSync('SELECT * FROM crimes ORDER BY createdAt DESC');
+      return statement.executeSync().getAllSync() as Crime[];
+    } catch (retryError) {
+      console.error('Database retry error:', retryError);
+      return [];
+    }
   }
 };
 
-export const getCrimeById = (id: string) => {
+export const getCrimeById = (id: string): Crime | null => {
   const statement = db.prepareSync('SELECT * FROM crimes WHERE id = ?');
-  return statement.executeSync([id]).getFirstSync();
+  return statement.executeSync([id]).getFirstSync() as Crime | null;
 };
 
 export const updateCrime = (crime: Crime) => {

@@ -1,6 +1,6 @@
 import { FlatList } from "react-native";
 import CrimeCard from "./CrimeCard";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getAllCrimes } from "@/services/crimedatabase";
 import { useFocusEffect } from "@react-navigation/native";
 

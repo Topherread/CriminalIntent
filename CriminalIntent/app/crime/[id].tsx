@@ -3,5 +3,8 @@ import CrimeSetup from '@/components/CrimeSetup';
 
 export default function EditCrime() {
   const { id } = useLocalSearchParams();
-  return <CrimeSetup crimeId={id} />
+  
+  const crimeId = Array.isArray(id) ? id[0] : id;
+  
+  return <CrimeSetup crimeId={crimeId} />;
 }

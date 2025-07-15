@@ -2,6 +2,8 @@ import { Text, View, Pressable, StyleSheet, Alert } from "react-native";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from "expo-router";
 import { deleteCrime } from "../services/crimedatabase";
+import { useContext } from "react";
+import ThemeContext from "../context/theme.context";
 
 interface Crime {
   id?: string;
@@ -15,6 +17,7 @@ interface Crime {
 
 const CrimeCard = ({ crime, onCrimeDeleted }: { crime: Crime, onCrimeDeleted?: () => void }) => {
   const router = useRouter();
+  const { theme } = useContext(ThemeContext);
   
   const handleDelete = () => {
     Alert.alert(
@@ -46,63 +49,69 @@ const CrimeCard = ({ crime, onCrimeDeleted }: { crime: Crime, onCrimeDeleted?: (
     );
   };
   
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.Colors.background,
+      marginVertical: 4,
+      marginHorizontal: 8,
+      borderRadius: 8,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.Colors.border,
+    },
+    crimeContent: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 4,
+      color: theme.Colors.text,
+    },
+    details: {
+      fontSize: 14,
+      color: theme.Colors.text,
+      marginBottom: 2,
+    },
+    date: {
+      fontSize: 12,
+      color: theme.Colors.text,
+    },
+    deleteButton: {
+      padding: 8,
+      marginLeft: 8,
+    },
+  });
+  
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <Pressable 
-        style={styles.crimeContent}
-        onPress={() => crime.id && router.push(`/crime/${crime.id}`)}
+        style={dynamicStyles.crimeContent}
+        onPress={() => {
+          if (crime.id) {
+            router.push(`/crime/${crime.id}`);
+          }
+        }}
       >
         <View>
-          <Text style={styles.title}>{crime.title || "Untitled Crime"}</Text>
-          <Text style={styles.details}>Details: {crime.details || "No details"}</Text>
-          <Text style={styles.date}>Date: {crime.date ? String(crime.date) : "No date"}</Text>
+          <Text style={dynamicStyles.title}>{crime.title || "Untitled Crime"}</Text>
+          <Text style={dynamicStyles.date}>Date: {crime.date ? String(crime.date) : "No date"}</Text>
         </View>
-        {crime.solved && (
-          <MaterialCommunityIcons name="handcuffs" size={24} color="black" />
+        {Boolean(crime.solved) && (
+          <MaterialCommunityIcons name="handcuffs" size={24} color={theme.Colors.text} />
         )}
       </Pressable>
       
-      <Pressable style={styles.deleteButton} onPress={handleDelete}>
+      <Pressable style={dynamicStyles.deleteButton} onPress={handleDelete}>
         <MaterialCommunityIcons name="delete" size={20} color="red" />
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    marginVertical: 4,
-    marginHorizontal: 8,
-    borderRadius: 8,
-    padding: 12,
-  },
-  crimeContent: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  details: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 2,
-  },
-  date: {
-    fontSize: 12,
-    color: "#888",
-  },
-  deleteButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-});
 
 export default CrimeCard;
